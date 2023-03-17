@@ -3,7 +3,7 @@ import Head from "next/head";
 import { signIn, signOut, useSession } from "next-auth/react"
 import { CreateTodo } from "~/components/CreateTodo";
 import { Todos } from "~/components/Todos";
-export const Home = () => {
+const Home = () => {
   const { data: sessionData } = useSession();
   return (
     <>
@@ -43,3 +43,4 @@ export const Home = () => {
     </>
   );
 }
+export default Home
