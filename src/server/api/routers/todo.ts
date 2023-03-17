@@ -1,5 +1,5 @@
 import { todoInput } from "~/types";
-
+import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const todoRouter = createTRPCRouter({
@@ -42,6 +42,33 @@ export const todoRouter = createTRPCRouter({
               id: ctx.session.user.id,
             },
           },
+        },
+      });
+    }),
+
+  //delete a todo and u must be authenticated
+
+  delete: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.todo.delete({
+        where: {
+          id: input,
+        },
+      });
+    }),
+
+  //update a todo a todo and u must be authenticated
+
+  toggle: protectedProcedure
+    .input(z.object({ id: z.string(), done: z.boolean() }))
+    .mutation(async ({ ctx, input: { id, done } }) => {
+      return ctx.prisma.todo.update({
+        where: {
+          id,
+        },
+        data: {
+          done,
         },
       });
     }),
