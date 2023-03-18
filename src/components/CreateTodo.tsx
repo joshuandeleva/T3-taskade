@@ -1,8 +1,50 @@
 import { type FormEvent, useState } from "react"
+import { toast } from "react-hot-toast"
 import { todoInput } from "~/types"
-
+import { api } from "~/utils/api"
 export const CreateTodo = () => {
     const [newTodo, setNewTodo] = useState('')
+
+    //access query cache
+    const trpc = api.useContext()
+
+    const { mutate } = api.todo.create.useMutation({
+        onMutate: async (newTodo) => {
+
+            //cancel any outgoing refetches so they dont overwrite our optimistic update
+            await trpc.todo.all.cancel()
+
+            const previousTodos = trpc.todo.all.getData()
+
+            //update to the new value optimistically
+
+            trpc.todo.all.setData(undefined, (prev) => {
+                const optimisticTodo = {
+                    id: 'optimistic-todo-id',
+                    text: newTodo,
+                    done: false
+
+                }
+                if (!prev) return [optimisticTodo]
+                return [...prev, optimisticTodo]
+
+            })
+
+            setNewTodo('')
+
+            return ({ previousTodos })
+
+        },
+        onError: (err, newTodo, context) => {
+            toast.error('An error creating todo')
+            setNewTodo(newTodo)
+            trpc.todo.all.setData(undefined, () => context?.previousTodos)
+        },
+        onSettled: async () => {
+            await trpc.todo.all.invalidate()
+
+        }
+    })
 
     //handle submit 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -11,9 +53,12 @@ export const CreateTodo = () => {
         const result = todoInput.safeParse(newTodo)
 
         if (!result.success) {
-            console.log('Invalid')
+            toast.error(result.error.format()._errors.join('\n')
+            )
 
         }
+
+        mutate(newTodo)
 
     }
 

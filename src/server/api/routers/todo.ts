@@ -11,22 +11,7 @@ export const todoRouter = createTRPCRouter({
       },
     });
 
-    console.log(
-      "Todos from prisma",
-      todos.map(({ id, text, done }) => ({ id, text, done }))
-    );
-    return [
-      {
-        id: "fake",
-        text: "fake txt",
-        done: false,
-      },
-      {
-        id: "fake2",
-        text: "fake txt2",
-        done: true,
-      },
-    ];
+    return todos.map(({ id, text, done }) => ({ id, text, done }));
   }),
 
   //create a todo and u must be authenticated
